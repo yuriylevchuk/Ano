@@ -1,3 +1,0 @@
-[submodule "GameN\\vendor\\GLFW"]
-	path = GameN\\vendor\\GLFW
-	url = https://github.com/glfw/glfw
