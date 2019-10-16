@@ -10,11 +10,13 @@
 
 class Shader {
 public:
-	Shader(const std::string& vertexPath, const std::string& fragmentPath);
+	Shader();
 	~Shader();
 
 	void Bind();
 	void Unbind();
+
+	void Create(const std::string& vertexPath, const std::string& fragmentPath);
 private:
 	GLuint m_shaderProgram;
 private:

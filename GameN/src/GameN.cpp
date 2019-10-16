@@ -14,10 +14,9 @@ public:
 		glfwTerminate();
 	}
 
-	int Init() {
+	void Init() {
 		if (!glfwInit()) {
 			std::cout << "Failed to initialize GLAD" << std::endl;
-			return -1;
 		}
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -29,7 +28,6 @@ public:
 		{
 			std::cout << "Failed to create window: " << m_windowTitle << std::endl;
 			glfwTerminate();
-			return -1;
 		}
 
 		glfwMakeContextCurrent(m_window);
@@ -37,15 +35,12 @@ public:
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		{
 			std::cout << "Failed to initialize GLAD" << std::endl;
-			return -1;
 		}
 
 		glViewport(0, 0, m_windowWidth, m_windowHeight);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-		return 1;
+		/*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
 	}
 
 	void processInput()
@@ -55,9 +50,19 @@ public:
 	}
 
 	void OnUpdate() {
-		glBindVertexArray(m_vao);
-		glDrawElements(GL_TRIANGLES, 21, GL_UNSIGNED_INT, 0);
+
+
+		m_shader.Bind();
+		glBindVertexArray(m_vao);/*
+		glDrawElements(GL_TRIANGLES, 21, GL_UNSIGNED_INT, 0);*/
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
+		m_shader.Unbind();
+		m_shader2.Bind();
+		glBindVertexArray(m_vao2);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindVertexArray(0);
+		m_shader2.Unbind();
 	}
 
 	void Run() {
@@ -65,9 +70,10 @@ public:
 			-1.0f, 1.0f, 0.0f,
 			-1.0f, 0.0f, 0.0f,
 			 0.0f, 1.0f, 0.0f,
-			 0.0f, 0.0f, 0.0f,
-			 0.0f, -1.0f, 0.0f,
-			 1.0f, 0.0f, 0.0f,
+			 //0.0f, 0.0f, 0.0f,
+		};
+
+		GLfloat tile2[] = {
 			 1.0f, 1.0f, 0.0f,
 			 1.0f, -1.0f, 0.0f,
 			-1.0f, -1.0f, 0.0f,
@@ -87,6 +93,8 @@ public:
 		glGenBuffers(1, &m_vbo);
 		glGenBuffers(1, &m_ibo);
 		glGenVertexArrays(1, &m_vao);
+		glGenBuffers(1, &m_vbo2);
+		glGenVertexArrays(1, &m_vao2);
 
 		// Массив буфферов
 		glBindVertexArray(m_vao);
@@ -103,8 +111,22 @@ public:
 
 		glBindVertexArray(0);
 
-		Shader shader("res/shaders/Base.vert", "res/shaders/Base.frag");
-		shader.Bind();
+		//------------------------------------------------------
+
+		glBindVertexArray(m_vao2);
+
+		// Буффер вершин
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo2);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(tile2), tile2, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glBindVertexArray(0);
+
+		//---------------------------
+
+		m_shader.Create("res/shaders/Base.vert", "res/shaders/Base.frag");
+		m_shader2.Create("res/shaders/Base.vert", "res/shaders/Base2.frag");
 
 		while (!glfwWindowShouldClose(m_window)) {
 			processInput();
@@ -117,6 +139,12 @@ public:
 
 			glfwSwapBuffers(m_window);
 		}
+
+		glDeleteVertexArrays(1, &m_vao);
+		glDeleteBuffers(1, &m_vbo);
+		glDeleteVertexArrays(1, &m_vao2);
+		glDeleteBuffers(1, &m_vbo2);
+		glDeleteBuffers(1, &m_ibo);
 	}
 
 private:
@@ -124,15 +152,13 @@ private:
 	const unsigned int m_windowWidth = 1280;
 	const unsigned int m_windowHeight = 720;
 	const char* m_windowTitle = "GameN";
-	GLuint m_vao, m_vbo, m_ibo;
+	GLuint m_vao, m_vbo, m_vao2, m_vbo2, m_ibo;
+	Shader m_shader, m_shader2;
 };
 
 int main(int argc, char** argv) {
 	Game game;
-
 	game.Init();
-
 	game.Run();
-
 	return 0;
 }

@@ -1,12 +1,20 @@
 #include "Shader.h"
 
-Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) : m_shaderProgram(0) {
+Shader::Shader() : m_shaderProgram(0) {
+
+}
+
+Shader::~Shader() {
+
+}
+
+void Shader::Create(const std::string& vertexPath, const std::string& fragmentPath) {
 	GLuint vertexShader;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	const std::string vertexShaderSource = ParseShader(vertexPath);
 	const GLchar* srcV = vertexShaderSource.c_str();
 	glShaderSource(vertexShader, 1, &srcV, NULL);
-	glCompileShader(vertexShader);
+	glCompileShader(vertexShader); //TODO create CompileShader method
 	GLint success;
 	GLchar infoLog[512];
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -40,10 +48,6 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) :
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-}
-
-Shader::~Shader() {
-
 }
 
 std::string Shader::ParseShader(const std::string& filePath) {
