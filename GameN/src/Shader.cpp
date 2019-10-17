@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Shader.h"
 
 Shader::Shader() : m_shaderProgram(0) {
@@ -48,6 +50,7 @@ void Shader::Create(const std::string& vertexPath, const std::string& fragmentPa
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+	return;
 }
 
 std::string Shader::ParseShader(const std::string& filePath) {
@@ -67,10 +70,7 @@ std::string Shader::ParseShader(const std::string& filePath) {
 	return shaderCode;
 }
 
-void Shader::Bind() {
+void Shader::Use() {
 	glUseProgram(m_shaderProgram);
-}
-
-void Shader::Unbind() {
-	glUseProgram(0);
+	return;
 }

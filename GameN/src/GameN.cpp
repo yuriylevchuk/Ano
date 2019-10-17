@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 
 #include <glad/glad.h>
@@ -7,7 +9,7 @@
 
 class Game {
 public:
-	Game() {
+	Game() : m_ibo(0), m_vao(0), m_vao2(0), m_vbo(0), m_vbo2(0) {
 	}
 
 	~Game() {
@@ -50,44 +52,36 @@ public:
 	}
 
 	void OnUpdate() {
+		//m_shader2.Use();
+		//glBindVertexArray(m_vao);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		//glBindVertexArray(0);
 
-
-		m_shader.Bind();
-		glBindVertexArray(m_vao);/*
-		glDrawElements(GL_TRIANGLES, 21, GL_UNSIGNED_INT, 0);*/
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindVertexArray(0);
-		m_shader.Unbind();
-		m_shader2.Bind();
+		m_shader.Use();
 		glBindVertexArray(m_vao2);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
-		m_shader2.Unbind();
+		glBindVertexArray(0);
 	}
 
 	void Run() {
-		GLfloat tile[] = {
-			-1.0f, 1.0f, 0.0f,
-			-1.0f, 0.0f, 0.0f,
-			 0.0f, 1.0f, 0.0f,
-			 //0.0f, 0.0f, 0.0f,
+		GLfloat triangle[] = {
+			// positions        // colors
+			0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
+		   -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
+			0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f
 		};
 
-		GLfloat tile2[] = {
-			 1.0f, 1.0f, 0.0f,
-			 1.0f, -1.0f, 0.0f,
-			-1.0f, -1.0f, 0.0f,
+		GLfloat tile[] = {
+			-0.5f, 0.5f, 0.0f,
+			-0.5f,-0.5f, 0.0f,
+			 0.5f,-0.5f, 0.0f,
+			 0.5f, 0.5f, 0.0f,
 		};
 
 		GLuint tileIndices[] = {
 			0, 1, 2,
-			4, 5, 6,
-			6, 3, 0,
-			3, 7, 5,
-			2, 4, 5,
-			8, 4, 5,
-			8, 3, 4
-
+			2, 3, 0
 		};
 
 		glGenBuffers(1, &m_vbo);
@@ -117,9 +111,11 @@ public:
 
 		// Буффер вершин
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo2);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(tile2), tile2, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
 
 		glBindVertexArray(0);
 
