@@ -10,6 +10,11 @@ Shader::~Shader() {
 
 }
 
+GLuint Shader::GetID() const
+{
+	return m_shaderProgram;
+}
+
 void Shader::Create(const std::string& vertexPath, const std::string& fragmentPath) {
 	GLuint vertexShader;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);

@@ -92,12 +92,14 @@
     <ClCompile Include="src\GameN.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="vendor\Glad\src\glad.c" />
+    <ClCompile Include="vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="vendor\Glad\include\glad\glad.h" />
     <ClInclude Include="vendor\Glad\include\KHR\khrplatform.h" />
+    <ClInclude Include="vendor\stb_image\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Base.frag" />
