@@ -1,5 +1,7 @@
 #pragma once
 
+#define GLFW_INCLUDE_NONE
+
 #include <iostream>
 
 #include <glad/glad.h>
@@ -10,9 +12,18 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "shader.h"
 
+GLfloat m_lastX = 500, m_lastY = 500;
+GLfloat m_yaw = -90.0f;
+GLfloat m_pitch = 0.0f;
+bool m_firstMouse = true;
+GLfloat m_fov = 45.0f;
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+
 class Game {
 public:
-	Game() : m_ibo(0), m_vao(0), m_vbo(0), m_texture1(0), m_texture2(0), m_mixingRatio(0.2f), m_fov(45.0f), m_xOffset(0.0f) {
+	Game() : m_ibo(0), m_vao(0), m_vbo(0), m_texture1(0), m_texture2(0), m_mixingRatio(0.2f) {
 	}
 
 	~Game() {
@@ -20,6 +31,7 @@ public:
 	}
 
 	void Init() {
+
 		if (!glfwInit()) {
 			std::cout << "Failed to initialize GLAD" << std::endl;
 		}
@@ -48,6 +60,10 @@ public:
 		glViewport(0, 0, m_windowWidth, m_windowHeight);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
+		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+		glfwSetCursorPosCallback(m_window, mouse_callback);
+		glfwSetScrollCallback(m_window, scroll_callback);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
@@ -56,46 +72,55 @@ public:
 		if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(m_window, true);
 
-		if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS) {
-			//if (m_mixingRatio < 1.0f) {
-			//	m_mixingRatio += 0.01f;
-			//	std::cout << m_mixingRatio << std::endl;
-			//}
-			m_fov += 0.5f;
-			std::cout << "FOV = " << m_fov << std::endl;
+		GLfloat cameraSpeed = 2.5f * m_deltaTime;
+		if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
+			m_cameraPos += cameraSpeed * m_cameraFront;
 		}
 
-		if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-			//if (m_mixingRatio > 0.0f) {
-			//	m_mixingRatio -= 0.01f;
-			//	if (m_mixingRatio <= 0.0f)
-			//		m_mixingRatio = 0.0f;
-			//	std::cout << m_mixingRatio << std::endl;
-			//}
-			m_fov -= 0.5f;
-			std::cout << "FOV = " << m_fov << std::endl;
+		if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
+			m_cameraPos -= cameraSpeed * m_cameraFront;
 		}
 
-		if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-			m_xOffset += 0.05f;
+		if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
+			m_cameraPos -= glm::normalize(glm::cross(m_cameraFront, m_cameraUp)) * cameraSpeed;
 		}
 
-		if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-			m_xOffset -= 0.05f;
+		if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
+			m_cameraPos += glm::normalize(glm::cross(m_cameraFront, m_cameraUp)) * cameraSpeed;
 		}
 	}
 
 	void OnUpdate() {
+		GLfloat currentFrame = glfwGetTime();
+		m_deltaTime = currentFrame - m_lastFrame;
+		m_lastFrame = currentFrame;
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_texture1);
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_texture2);
 
+
+		// Camera
+		//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+		//glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+		//glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+		//glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+		//glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+		//glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+
 		//glm::mat4 model = glm::mat4(1.0f);
 		//model = glm::rotate(model, glm::radians((GLfloat)glfwGetTime() * 50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+		glm::vec3 front;
+		front.x = cos(glm::radians(m_pitch)) * cos(glm::radians(m_yaw));
+		front.y = sin(glm::radians(m_pitch));
+		front.z = cos(glm::radians(m_pitch)) * sin(glm::radians(m_yaw));
+		m_cameraFront = glm::normalize(front);
+
 		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(m_xOffset, 0.0f, -3.0f));
+		view = glm::lookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp);
+		//view = glm::translate(view, glm::vec3(m_xOffset, 0.0f, -3.0f));
 		glm::mat4 projection = glm::mat4(1.0f);
 		projection = glm::perspective(glm::radians(m_fov), (float) m_windowWidth / (float) m_windowHeight, 0.1f, 100.0f);
 		//glm::mat4 trans = glm::mat4(1.0f);
@@ -274,15 +299,13 @@ public:
 
 private:
 	GLFWwindow* m_window = nullptr;
-	const unsigned int m_windowWidth = 800;
-	const unsigned int m_windowHeight = 800;
+	const unsigned int m_windowWidth = 1000;
+	const unsigned int m_windowHeight = 1000;
 	const char* m_windowTitle = "GameN";
 	GLuint m_vao, m_vbo, m_ibo;
 	Shader m_shader;
 	GLuint m_texture1, m_texture2;
 	GLfloat m_mixingRatio;
-	GLfloat m_fov;
-	GLfloat m_xOffset;
 
 	glm::vec3 m_cubePositions[10] = {
 		  glm::vec3(0.0f,  0.0f,  0.0f),
@@ -296,7 +319,50 @@ private:
 		  glm::vec3(1.5f,  0.2f, -1.5f),
 		  glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
+
+	glm::vec3 m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	GLfloat m_deltaTime = 0.0f;	// Время, прошедшее между последним и текущим кадром
+	GLfloat m_lastFrame = 0.0f;  	// Время вывода последнего кадра
 };
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+	if (m_firstMouse)
+	{
+		m_lastX = xpos;
+		m_lastY = ypos;
+		m_firstMouse = false;
+	}
+
+	GLfloat xoffset = xpos - m_lastX;
+	GLfloat yoffset = m_lastY - ypos;
+	m_lastX = xpos;
+	m_lastY = ypos;
+	GLfloat sensitivity = 0.05f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	m_yaw += xoffset;
+	m_pitch += yoffset;
+
+	if (m_pitch > 89.0f)
+		m_pitch = 89.0f;
+	if (m_pitch < -89.0f)
+		m_pitch = -89.0f;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	if (m_fov >= 1.0f && m_fov <= 45.0f)
+		m_fov -= yoffset;
+	if (m_fov <= 1.0f)
+		m_fov = 1.0f;
+	if (m_fov >= 45.0f)
+		m_fov = 45.0f;
+
+	std::cout << "fov: " << m_fov << std::endl;
+}
 
 int main(int argc, char** argv) {
 	Game game;
