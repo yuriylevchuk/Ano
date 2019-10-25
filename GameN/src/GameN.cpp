@@ -1,7 +1,5 @@
 #pragma once
 
-#define GLFW_INCLUDE_NONE
-
 #include <iostream>
 
 #include <glad/glad.h>
@@ -12,7 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "shader.h"
 
-GLfloat m_lastX = 500, m_lastY = 500;
+GLfloat m_lastX = 600, m_lastY = 500;
 GLfloat m_yaw = -90.0f;
 GLfloat m_pitch = 0.0f;
 bool m_firstMouse = true;
@@ -27,6 +25,7 @@ public:
 	}
 
 	~Game() {
+		glfwDestroyWindow(m_window);
 		glfwTerminate();
 	}
 
@@ -52,6 +51,11 @@ public:
 
 		glfwSwapInterval(1);
 
+		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+		glfwSetCursorPosCallback(m_window, mouse_callback);
+		glfwSetScrollCallback(m_window, scroll_callback);
+
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		{
 			std::cout << "Failed to initialize GLAD" << std::endl;
@@ -60,10 +64,6 @@ public:
 		glViewport(0, 0, m_windowWidth, m_windowHeight);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
-		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-		glfwSetCursorPosCallback(m_window, mouse_callback);
-		glfwSetScrollCallback(m_window, scroll_callback);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
@@ -225,7 +225,7 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(1);
 
 		// Буффер индексов
@@ -299,7 +299,7 @@ public:
 
 private:
 	GLFWwindow* m_window = nullptr;
-	const unsigned int m_windowWidth = 1000;
+	const unsigned int m_windowWidth = 1200;
 	const unsigned int m_windowHeight = 1000;
 	const char* m_windowTitle = "GameN";
 	GLuint m_vao, m_vbo, m_ibo;
