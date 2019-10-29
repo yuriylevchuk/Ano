@@ -3,15 +3,12 @@
 #include "Shader.h"
 
 Shader::Shader() : m_shaderProgram(0) {
-
 }
 
 Shader::~Shader() {
-
 }
 
-GLuint Shader::GetID() const
-{
+GLuint Shader::GetID() const {
 	return m_shaderProgram;
 }
 

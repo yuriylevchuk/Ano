@@ -15,8 +15,8 @@ public:
 
 	GLuint GetID() const;
 
-	void Use();
 	void Create(const std::string& vertexPath, const std::string& fragmentPath);
+	void Use();
 private:
 	GLuint m_shaderProgram;
 private:

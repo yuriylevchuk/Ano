@@ -32,7 +32,7 @@ public:
 	void Init() {
 
 		if (!glfwInit()) {
-			std::cout << "Failed to initialize GLAD" << std::endl;
+			std::cout << "Failed to initialize GLFW" << std::endl;
 		}
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -124,15 +124,6 @@ public:
 
 
 		// Camera
-		//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-		//glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-		//glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
-		//glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-		//glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-		//glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-
-		//glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::rotate(model, glm::radians((GLfloat)glfwGetTime() * 50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 		glm::vec3 front;
 		front.x = cos(glm::radians(m_pitch)) * cos(glm::radians(m_yaw));
 		front.y = sin(glm::radians(m_pitch));
@@ -141,13 +132,8 @@ public:
 
 		glm::mat4 view = glm::mat4(1.0f);
 		view = LookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp);
-		//view = glm::translate(view, glm::vec3(m_xOffset, 0.0f, -3.0f));
 		glm::mat4 projection = glm::mat4(1.0f);
 		projection = glm::perspective(glm::radians(m_fov), (float) m_windowWidth / (float) m_windowHeight, 0.1f, 100.0f);
-		//glm::mat4 trans = glm::mat4(1.0f);
-		//trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-		//trans = glm::rotate(trans, glm::radians((GLfloat)glfwGetTime() * 50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
 
 		GLuint modelLoc = glGetUniformLocation(m_shader.GetID(), "model");
 		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -244,8 +230,12 @@ public:
 		// Буффер вершин
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+
+		// position attributes
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
+
+		// texture coords attributes
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(1);
 
@@ -381,8 +371,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 		m_fov = 1.0f;
 	if (m_fov >= 45.0f)
 		m_fov = 45.0f;
-
-	std::cout << "fov: " << m_fov << std::endl;
 }
 
 int main(int argc, char** argv) {
