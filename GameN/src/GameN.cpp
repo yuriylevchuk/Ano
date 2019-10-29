@@ -90,6 +90,27 @@ public:
 		}
 	}
 
+	glm::mat4 LookAt(glm::vec3 pos, glm::vec3 target, glm::vec3 up) {
+		glm::vec3 cameraDirection = glm::normalize(pos - target);
+		glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+		glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+		glm::mat4 translator = glm::mat4(1.0f);
+		glm::mat4 rotator = glm::mat4(1.0f);
+		translator[3][0] = -pos.x;
+		translator[3][1] = -pos.y;
+		translator[3][2] = -pos.z;
+		rotator[0][0] = cameraRight.x;
+		rotator[1][0] = cameraRight.y;
+		rotator[2][0] = cameraRight.z;
+		rotator[0][1] = cameraUp.x;
+		rotator[1][1] = cameraUp.y;
+		rotator[2][1] = cameraUp.z;
+		rotator[0][2] = cameraDirection.x;
+		rotator[1][2] = cameraDirection.y;
+		rotator[2][2] = cameraDirection.z;
+		return rotator * translator;
+	}
+
 	void OnUpdate() {
 		GLfloat currentFrame = glfwGetTime();
 		m_deltaTime = currentFrame - m_lastFrame;
@@ -119,7 +140,7 @@ public:
 		m_cameraFront = glm::normalize(front);
 
 		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::lookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp);
+		view = LookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp);
 		//view = glm::translate(view, glm::vec3(m_xOffset, 0.0f, -3.0f));
 		glm::mat4 projection = glm::mat4(1.0f);
 		projection = glm::perspective(glm::radians(m_fov), (float) m_windowWidth / (float) m_windowHeight, 0.1f, 100.0f);
