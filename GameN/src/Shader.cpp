@@ -8,8 +8,20 @@ Shader::Shader() : m_shaderProgram(0) {
 Shader::~Shader() {
 }
 
-GLuint Shader::GetID() const {
-	return m_shaderProgram;
+void Shader::setInt(const std::string& name, unsigned int value) {
+	glUniform1i(glGetUniformLocation(m_shaderProgram, name.c_str()), value);
+}
+
+void Shader::setFloat(const std::string& name, float value) {
+	glUniform1f(glGetUniformLocation(m_shaderProgram, name.c_str()), value);
+}
+
+void Shader::set3Float(const std::string& name, float v1, float v2, float v3) {
+	glUniform3f(glGetUniformLocation(m_shaderProgram, name.c_str()), v1, v2, v3);
+}
+
+void Shader::setMat4(const std::string& name, const glm::mat4& mat) {
+	glUniformMatrix4fv(glGetUniformLocation(m_shaderProgram, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
 
 void Shader::Create(const std::string& vertexPath, const std::string& fragmentPath) {
@@ -52,7 +64,6 @@ void Shader::Create(const std::string& vertexPath, const std::string& fragmentPa
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-	return;
 }
 
 std::string Shader::ParseShader(const std::string& filePath) {
@@ -74,5 +85,4 @@ std::string Shader::ParseShader(const std::string& filePath) {
 
 void Shader::Use() {
 	glUseProgram(m_shaderProgram);
-	return;
 }

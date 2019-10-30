@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Camera.h"
 
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) 
@@ -9,19 +11,23 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
 	UpdateCameraVectors();
 }
 
+float Camera::GetZoom() const {
+	return m_Zoom;
+}
+
 glm::mat4 Camera::GetViewMatrix() {
 	return glm::lookAt(m_Position, m_Position + m_Front, m_Up);
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
 	float velocity = m_MovementSpeed * deltaTime;
-	if (direction == FORWARD)
+	if (direction == Camera_Movement::FORWARD)
 		m_Position += m_Front * velocity;
-	if (direction == BACKWARD)
+	if (direction == Camera_Movement::BACKWARD)
 		m_Position -= m_Front * velocity;
-	if (direction == LEFT)
+	if (direction == Camera_Movement::LEFT)
 		m_Position -= m_Right * velocity;
-	if (direction == RIGHT)
+	if (direction == Camera_Movement::RIGHT)
 		m_Position += m_Right * velocity;
 }
 

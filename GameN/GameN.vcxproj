@@ -90,7 +90,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\GameN.cpp" />
     <ClCompile Include="src\Shader.cpp" />
@@ -98,7 +97,6 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="vendor\Glad\include\glad\glad.h" />
@@ -106,9 +104,12 @@
     <ClInclude Include="vendor\stb_image\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shaders\Base.frag" />
-    <None Include="res\shaders\Base.vert" />
-    <None Include="res\shaders\Base2.frag" />
+    <None Include="res\shaders\color.frag" />
+    <None Include="res\shaders\color_light.frag" />
+    <None Include="res\shaders\color_white.frag" />
+    <None Include="res\shaders\pos.vert" />
+    <None Include="res\shaders\pos_texpos.vert" />
+    <None Include="res\shaders\mix_two_tex.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
