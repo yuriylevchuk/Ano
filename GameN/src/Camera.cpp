@@ -19,6 +19,10 @@ glm::vec3 Camera::GetPosition() const {
 	return m_Position;
 }
 
+glm::vec3 Camera::GetFront() const {
+	return m_Front;
+}
+
 glm::mat4 Camera::GetViewMatrix() {
 	return glm::lookAt(m_Position, m_Position + m_Front, m_Up);
 }

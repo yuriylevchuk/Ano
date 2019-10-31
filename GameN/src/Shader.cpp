@@ -8,23 +8,27 @@ Shader::Shader() : m_shaderProgram(0) {
 Shader::~Shader() {
 }
 
-void Shader::setInt(const std::string& name, unsigned int value) {
+void Shader::setInt(const std::string &name, unsigned int value) const {
 	glUniform1i(glGetUniformLocation(m_shaderProgram, name.c_str()), value);
 }
 
-void Shader::setFloat(const std::string& name, float value) {
+void Shader::setFloat(const std::string &name, float value) const {
 	glUniform1f(glGetUniformLocation(m_shaderProgram, name.c_str()), value);
 }
 
-void Shader::set3Float(const std::string& name, float v1, float v2, float v3) {
+void Shader::set3Float(const std::string &name, float v1, float v2, float v3) const {
 	glUniform3f(glGetUniformLocation(m_shaderProgram, name.c_str()), v1, v2, v3);
 }
 
-void Shader::setMat4(const std::string& name, const glm::mat4& mat) {
+void Shader::setVec3(const std::string &name, const glm::vec3 &vec) const {
+	glUniform3fv(glGetUniformLocation(m_shaderProgram, name.c_str()), 1, &vec[0]);
+}
+
+void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const {
 	glUniformMatrix4fv(glGetUniformLocation(m_shaderProgram, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
 
-void Shader::Create(const std::string& vertexPath, const std::string& fragmentPath) {
+void Shader::Create(const std::string &vertexPath, const std::string &fragmentPath) {
 	GLuint vertexShader;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	const std::string vertexShaderSource = ParseShader(vertexPath);

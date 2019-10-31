@@ -15,15 +15,16 @@ public:
 	Shader();
 	~Shader();
 
-	void setInt(const std::string& name, unsigned int value);
-	void setFloat(const std::string& name, float value);
-	void set3Float(const std::string& name, float v1, float v2, float v3);
-	void setMat4(const std::string& name, const glm::mat4 &mat);
+	void setInt(const std::string &name, unsigned int value) const;
+	void setFloat(const std::string &name, float value) const;
+	void set3Float(const std::string &name, float v1, float v2, float v3) const;
+	void setVec3(const std::string& name, const glm::vec3& vec) const;
+	void setMat4(const std::string &name, const glm::mat4 &mat) const;
 
-	void Create(const std::string& vertexPath, const std::string& fragmentPath);
+	void Create(const std::string &vertexPath, const std::string &fragmentPath);
 	void Use();
 private:
 	GLuint m_shaderProgram;
 private:
-	std::string ParseShader(const std::string& filePath);
+	std::string ParseShader(const std::string &filePath);
 };
