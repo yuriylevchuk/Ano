@@ -197,8 +197,12 @@ public:
 
 		glm::mat4 model = glm::mat4(1.0f);;
 		model = glm::translate(model, cubePositions[0]);
+		//model = glm::rotate(model, glm::radians(20.0f * (GLfloat)glfwGetTime()), glm::vec3(1.0f, 0.3f, 0.5f));
 		m_ObjShader.setMat4("model", model);
 		
+		glm::vec3 cameraPos = camera.GetPosition();
+		m_ObjShader.set3Float("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+
 		glBindVertexArray(objVao);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 

@@ -15,6 +15,10 @@ float Camera::GetZoom() const {
 	return m_Zoom;
 }
 
+glm::vec3 Camera::GetPosition() const {
+	return m_Position;
+}
+
 glm::mat4 Camera::GetViewMatrix() {
 	return glm::lookAt(m_Position, m_Position + m_Front, m_Up);
 }

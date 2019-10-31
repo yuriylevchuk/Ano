@@ -13,5 +13,6 @@ uniform mat4 projection;
 void main() {
   gl_Position = projection * view * model * vec4(pos, 1.0f);
   FragPos = vec3(model * vec4(pos, 1.0f));
-  Normal = normal;
+  // TODO transfer normal matrix computation to CPU (it's a hard operation)
+  Normal =  mat3(transpose(inverse(model))) * normal;
 }
