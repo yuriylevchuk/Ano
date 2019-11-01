@@ -134,7 +134,14 @@ glm::vec3 cubePositions[10] = {
 	  glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 pointLightPositions[] = {
+	glm::vec3(0.7f,  0.2f,  2.0f),
+	glm::vec3(2.3f, -3.3f, -4.0f),
+	glm::vec3(-4.0f,  2.0f, -12.0f),
+	glm::vec3(0.0f,  0.0f, -3.0f)
+};
+
+bool spotLightOn = false;
 
 GLuint objVao;
 GLuint lightVao;
@@ -170,6 +177,7 @@ public:
 		glfwSwapInterval(1);
 
 		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
 		glfwSetCursorPosCallback(m_window, mouse_callback);
 		glfwSetScrollCallback(m_window, scroll_callback);
@@ -211,14 +219,18 @@ public:
 		//lightPos.y = sin(glfwGetTime()) * 0.5f;
 		//lightPos.z = sin(glfwGetTime()) * 2.0f;
 		
-		//m_ObjShader.setVec3("light.position", lightPos);
-		m_ObjShader.setVec3("light.position", camera.GetPosition());
-		m_ObjShader.setVec3("light.direction", camera.GetFront());
-		m_ObjShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
-		m_ObjShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+		m_ObjShader.setVec3("spotLight.position", camera.GetPosition());
+		m_ObjShader.setVec3("spotLight.direction", camera.GetFront());
+		m_ObjShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		m_ObjShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+		if (spotLightOn) {
+			m_ObjShader.setInt("spotLightOn", 1);
+		} else {
+			m_ObjShader.setInt("spotLightOn", 0);
+		}
 
 		glBindVertexArray(objVao);
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		for (GLuint i = 0; i < 10; i++) {
 			model = glm::mat4(1.0f);
@@ -229,17 +241,18 @@ public:
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		//model = glm::mat4(1.0f);
-		//model = glm::translate(model, lightPos);
-		//model = glm::scale(model, glm::vec3(0.1f));
+		m_LightShader.Use();
+		m_LightShader.setMat4("view", view);
+		m_LightShader.setMat4("projection", projection);
 
-		//m_LightShader.Use();
-		//m_LightShader.setMat4("view", view);
-		//m_LightShader.setMat4("projection", projection);
-		//m_LightShader.setMat4("model", model);
-
-		//glBindVertexArray(lightVao);
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(lightVao);
+		for (GLuint i = 0; i < 4; i++) {
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.1f));
+			m_LightShader.setMat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 	}
 
 	void Run() {
@@ -284,12 +297,49 @@ public:
 		m_ObjShader.setInt("material.specular", 1);
 		m_ObjShader.setFloat("material.shininess", 32.0f);
 
-		m_ObjShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		m_ObjShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		m_ObjShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		m_ObjShader.setFloat("light.constant", 1.0f);
-		m_ObjShader.setFloat("light.linear", 0.09f);
-		m_ObjShader.setFloat("light.quadratic", 0.032f);
+		m_ObjShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		m_ObjShader.setVec3("dirLight.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
+		m_ObjShader.setVec3("dirLight.diffuse", glm::vec3(0.1f, 0.1f, 0.1f));
+		m_ObjShader.setVec3("dirLight.specular", glm::vec3(0.1f, 0.1f, 0.1f));
+
+		m_ObjShader.setVec3("spotLight.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
+		m_ObjShader.setVec3("spotLight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		m_ObjShader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		m_ObjShader.setFloat("spotLight.constant", 1.0f);
+		m_ObjShader.setFloat("spotLight.linear", 0.09f);
+		m_ObjShader.setFloat("spotLight.quadratic", 0.032f);
+
+		m_ObjShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+		m_ObjShader.setVec3("pointLights[0].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		m_ObjShader.setVec3("pointLights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		m_ObjShader.setVec3("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		m_ObjShader.setFloat("pointLights[0].constant", 1.0f);
+		m_ObjShader.setFloat("pointLights[0].linear", 0.09);
+		m_ObjShader.setFloat("pointLights[0].quadratic", 0.032);
+
+		m_ObjShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+		m_ObjShader.setVec3("pointLights[1].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		m_ObjShader.setVec3("pointLights[1].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		m_ObjShader.setVec3("pointLights[1].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		m_ObjShader.setFloat("pointLights[1].constant", 1.0f);
+		m_ObjShader.setFloat("pointLights[1].linear", 0.09);
+		m_ObjShader.setFloat("pointLights[1].quadratic", 0.032);
+
+		m_ObjShader.setVec3("pointLights[2].position", pointLightPositions[2]);
+		m_ObjShader.setVec3("pointLights[2].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		m_ObjShader.setVec3("pointLights[2].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		m_ObjShader.setVec3("pointLights[2].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		m_ObjShader.setFloat("pointLights[2].constant", 1.0f);
+		m_ObjShader.setFloat("pointLights[2].linear", 0.09);
+		m_ObjShader.setFloat("pointLights[2].quadratic", 0.032);
+
+		m_ObjShader.setVec3("pointLights[3].position", pointLightPositions[3]);
+		m_ObjShader.setVec3("pointLights[3].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		m_ObjShader.setVec3("pointLights[3].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		m_ObjShader.setVec3("pointLights[3].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		m_ObjShader.setFloat("pointLights[3].constant", 1.0f);
+		m_ObjShader.setFloat("pointLights[3].linear", 0.09);
+		m_ObjShader.setFloat("pointLights[3].quadratic", 0.032);
 		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -344,6 +394,11 @@ void processInput(GLFWwindow* window) {
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		camera.ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE)
+			spotLightOn = !spotLightOn;
 	}
 }
 
