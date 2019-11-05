@@ -4,3 +4,6 @@
 [submodule "GameN/vendor/glm"]
 	path = GameN/vendor/glm
 	url = https://github.com/g-truc/glm
+[submodule "GameN/vendor/assimp"]
+	path = GameN/vendor/assimp
+	url = https://github.com/assimp/assimp
