@@ -8,6 +8,9 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
 	SetupMesh();
 }
 
+Mesh::~Mesh() {
+}
+
 void Mesh::Draw(Shader shader) {
 	unsigned int diffuseN = 1;
 	unsigned int specularN = 1;
@@ -30,20 +33,20 @@ void Mesh::Draw(Shader shader) {
 	}
 	glActiveTexture(GL_TEXTURE0);
 
-	glBindVertexArray(m_VAO);
+	glBindVertexArray(mVAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 
 void Mesh::SetupMesh() {
-	glGenVertexArrays(1, &m_VAO);
-	glGenBuffers(1, &m_VBO);
-	glGenBuffers(1, &m_IBO);
+	glGenVertexArrays(1, &mVAO);
+	glGenBuffers(1, &mVBO);
+	glGenBuffers(1, &mIBO);
 
-	glBindVertexArray(m_VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+	glBindVertexArray(mVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
 	// vertex positions

@@ -84,7 +84,7 @@ public:
 		}
 
 		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
@@ -94,21 +94,7 @@ public:
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		
-		glm::mat4 view = camera.GetViewMatrix();
-		m_ObjShader.setMat4("view", view);
 
-		glm::mat4 projection = glm::mat4(1.0f);
-		projection = glm::perspective(glm::radians(camera.GetZoom()), (float) m_windowWidth / (float) m_windowHeight, 0.1f, 100.0f);
-		m_ObjShader.setMat4("projection", projection);
-
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-		model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_ObjShader.setMat4("model", model);
-		
-		glm::vec3 cameraPos = camera.GetPosition();
-		m_ObjShader.set3Float("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
 
 		//lightPos.x = cos(glfwGetTime()) * 2.0f;
 		//lightPos.y = sin(glfwGetTime()) * 0.5f;
@@ -140,13 +126,14 @@ public:
 	}
 
 	void Run() {
-		Model model("res/models/nanosuit/nanosuit.obj");
+		Model testModel("res/models/nanosuit/nanosuit.obj");
+		//Model testModel("res/models/cottage/cottage_blender.obj");
 		m_ObjShader.Create("res/shaders/model.vert", "res/shaders/model.frag");
 		m_ObjShader.Use();
 
 		m_ObjShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		m_ObjShader.setVec3("dirLight.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
-		m_ObjShader.setVec3("dirLight.diffuse", glm::vec3(0.1f, 0.1f, 0.1f));
+		m_ObjShader.setVec3("dirLight.ambient", glm::vec3(0.4f, 0.4f, 0.4f));
+		m_ObjShader.setVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
 		m_ObjShader.setVec3("dirLight.specular", glm::vec3(0.1f, 0.1f, 0.1f));
 
 		m_ObjShader.setVec3("pointLights[0].position", pointLightPositions[0]);
@@ -174,7 +161,38 @@ public:
 
 			OnUpdate();
 
-			model.Draw(m_ObjShader);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			glm::mat4 view = camera.GetViewMatrix();
+			m_ObjShader.setMat4("view", view);
+
+			glm::mat4 projection = glm::mat4(1.0f);
+			projection = glm::perspective(glm::radians(camera.GetZoom()), (float)m_windowWidth / (float)m_windowHeight, 0.1f, 100.0f);
+			m_ObjShader.setMat4("projection", projection);
+
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+			//model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			m_ObjShader.setMat4("model", model);
+
+			glm::vec3 cameraPos = camera.GetPosition();
+			m_ObjShader.set3Float("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+
+
+			testModel.Draw(m_ObjShader);
+
+
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(1.7f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+			//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+			//model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			//m_ObjShader.setMat4("model", model);
+
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			
+			//testModel.Draw(m_ObjShader);
 
 			glfwSwapBuffers(m_window);
 		}
