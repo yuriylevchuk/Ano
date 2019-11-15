@@ -41,14 +41,14 @@ void main() {
 	vec3 norm = normalize(Normal);
 	vec3 viewDir = normalize(viewPos - FragPos);
 	
-	// vec3 result = calcDirectionLight(dirLight, norm, viewDir);
+	vec3 result = calcDirectionLight(dirLight, norm, viewDir);
 
-	//for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-	//	result += calcPointLight(pointLights[i], norm, FragPos, viewDir);
-	//}
+	for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+		result += calcPointLight(pointLights[i], norm, FragPos, viewDir);
+	}
 
-	//FragColor = vec4(result, 1.0f);
-	FragColor = texture(texture_diffuse1, TexCoords);
+	FragColor = vec4(result, 1.0f);
+	//FragColor = texture(texture_diffuse1, TexCoords);
 }
 
 vec3 calcDirectionLight(DirectionLight light, vec3 normal, vec3 viewDir) {
