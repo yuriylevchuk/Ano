@@ -10,9 +10,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>	
 
-#include "shader.h"
-#include "camera.h"
+#include "Shader.h"
+#include "Camera.h"
 #include "Model.h"
+#include "Primitive.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -38,9 +39,14 @@ glm::vec3 pointLightPositions[] = {
 	glm::vec3(0.0f,  0.0f, -3.0f)
 };
 
+
+std::vector<glm::vec3> vegetation;
+
 bool spotLightOn = false;
 
 GLuint lightVao;
+
+Shader objShader, strokeShader;
 
 class Game {
 public:
@@ -83,9 +89,10 @@ public:
 			std::cout << "Failed to initialize GLAD" << std::endl;
 		}
 
-		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
+		//glEnable(GL_STENCIL_TEST);
+		//glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
@@ -126,73 +133,135 @@ public:
 	}
 
 	void Run() {
-		Model testModel("res/models/nanosuit/nanosuit.obj");
-		//Model testModel("res/models/cottage/cottage_blender.obj");
-		m_ObjShader.Create("res/shaders/model.vert", "res/shaders/model.frag");
-		m_ObjShader.Use();
+		//Model testModel("res/models/nanosuit/nanosuit.obj");
 
-		m_ObjShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		m_ObjShader.setVec3("dirLight.ambient", glm::vec3(0.4f, 0.4f, 0.4f));
-		m_ObjShader.setVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		m_ObjShader.setVec3("dirLight.specular", glm::vec3(0.1f, 0.1f, 0.1f));
+		vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+		vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+		vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+		vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+		vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
-		m_ObjShader.setVec3("pointLights[0].position", pointLightPositions[0]);
-		m_ObjShader.setVec3("pointLights[0].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		m_ObjShader.setVec3("pointLights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-		m_ObjShader.setVec3("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		m_ObjShader.setFloat("pointLights[0].constant", 1.0f);
-		m_ObjShader.setFloat("pointLights[0].linear", 0.09);
-		m_ObjShader.setFloat("pointLights[0].quadratic", 0.032);
+		Primitive cube(Primitive_Type::CUBE, "res/textures/box2.png");
+		Primitive plane(Primitive_Type::PLANE, "res/textures/concrete.jpg");
+		Primitive quad(Primitive_Type::QUAD, "res/textures/grass.png");
+		objShader.Create("res/shaders/model.vert", "res/shaders/model.frag");
+		strokeShader.Create("res/shaders/model.vert", "res/shaders/single_color.frag");
 
-		m_ObjShader.setVec3("pointLights[1].position", pointLightPositions[1]);
-		m_ObjShader.setVec3("pointLights[1].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		m_ObjShader.setVec3("pointLights[1].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-		m_ObjShader.setVec3("pointLights[1].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		m_ObjShader.setFloat("pointLights[1].constant", 1.0f);
-		m_ObjShader.setFloat("pointLights[1].linear", 0.09);
-		m_ObjShader.setFloat("pointLights[1].quadratic", 0.032);
+		//m_ObjShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		//m_ObjShader.setVec3("dirLight.ambient", glm::vec3(0.4f, 0.4f, 0.4f));
+		//m_ObjShader.setVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		//m_ObjShader.setVec3("dirLight.specular", glm::vec3(0.1f, 0.1f, 0.1f));
+
+		//m_ObjShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+		//m_ObjShader.setVec3("pointLights[0].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		//m_ObjShader.setVec3("pointLights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		//m_ObjShader.setVec3("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		//m_ObjShader.setFloat("pointLights[0].constant", 1.0f);
+		//m_ObjShader.setFloat("pointLights[0].linear", 0.09);
+		//m_ObjShader.setFloat("pointLights[0].quadratic", 0.032);
+
+		//m_ObjShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+		//m_ObjShader.setVec3("pointLights[1].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		//m_ObjShader.setVec3("pointLights[1].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		//m_ObjShader.setVec3("pointLights[1].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		//m_ObjShader.setFloat("pointLights[1].constant", 1.0f);
+		//m_ObjShader.setFloat("pointLights[1].linear", 0.09);
+		//m_ObjShader.setFloat("pointLights[1].quadratic", 0.032);
 
 		while (!glfwWindowShouldClose(m_window)) {
 			processInput(m_window);
 			
 			glfwPollEvents();
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 			OnUpdate();
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-			glm::mat4 view = camera.GetViewMatrix();
-			m_ObjShader.setMat4("view", view);
-
-			glm::mat4 projection = glm::mat4(1.0f);
-			projection = glm::perspective(glm::radians(camera.GetZoom()), (float)m_windowWidth / (float)m_windowHeight, 0.1f, 100.0f);
-			m_ObjShader.setMat4("projection", projection);
-
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-			model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			m_ObjShader.setMat4("model", model);
+			glm::mat4 view = camera.GetViewMatrix();
+			glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), (float)m_windowWidth / (float)m_windowHeight, 0.1f, 100.0f);
 
-			glm::vec3 cameraPos = camera.GetPosition();
-			m_ObjShader.set3Float("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+			strokeShader.Use();
+			strokeShader.setMat4("view", view);
+			strokeShader.setMat4("projection", projection);
 
+			objShader.Use();
+			objShader.setMat4("view", view);
+			objShader.setMat4("projection", projection);
 
-			testModel.Draw(m_ObjShader);
+			//glStencilMask(0x00);
 
+			objShader.setMat4("model", model);
+			plane.Draw(objShader);
+
+			//glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			//glStencilMask(0xFF);
+
+			model = glm::translate(model, glm::vec3(-1.0f, 0.002f, -0.3f));
+			objShader.setMat4("model", model);
+			cube.Draw(objShader);
 
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(1.7f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-			model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::translate(model, glm::vec3(2.0f, 0.002f, 1.0f));
+			objShader.setMat4("model", model);
+			cube.Draw(objShader);
 
-			m_ObjShader.setMat4("model", model);
+			for (unsigned int i = 0; i < vegetation.size(); i++) {
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, vegetation[i]);
+				objShader.setMat4("model", model);
+				quad.Draw(objShader);
+			}
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			
-			testModel.Draw(m_ObjShader);
+			model = glm::mat4(1.0f);
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::translate(model, vegetation[2]);
+			model = glm::translate(model, glm::vec3(0.2f, 0.0f, -0.22f));
+			objShader.setMat4("model", model);
+			quad.Draw(objShader);
+
+
+			//glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			//glStencilMask(0x00);
+			//glDisable(GL_DEPTH_TEST);
+
+			//strokeShader.Use();
+			//float scale = 1.05;
+
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+			//model = glm::scale(model, glm::vec3(scale, scale, scale));
+			//strokeShader.setMat4("model", model);
+			//cube.Draw(strokeShader);
+
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+			//model = glm::scale(model, glm::vec3(scale, scale, scale));
+			//strokeShader.setMat4("model", model);
+			//cube.Draw(strokeShader);
+
+			//glStencilMask(0xFF);
+			//glEnable(GL_DEPTH_TEST);
+
+			//model = glm::mat4(1.0f);
+
+			//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+			//model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			//objShader.setMat4("model", model);
+			//glm::vec3 cameraPos = camera.GetPosition();
+			//objShader.set3Float("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+			//cube.Draw(objShader);
+
+			//testModel.Draw(m_ObjShader);
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(1.7f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+			//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+			//model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			//m_ObjShader.setMat4("model", model);
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			//testModel.Draw(m_ObjShader);
 
 			glfwSwapBuffers(m_window);
 		}
@@ -207,8 +276,6 @@ private:
 	const unsigned int m_windowWidth = SCR_WIDTH;
 	const unsigned int m_windowHeight = SCR_HEIGHT;
 	const char* m_windowTitle = "GameN";
-	Shader m_ObjShader; 
-	Shader m_LightShader;
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

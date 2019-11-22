@@ -94,6 +94,7 @@
     <ClCompile Include="src\GameN.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\Primitive.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="vendor\Glad\src\glad.c" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />
+    <ClInclude Include="src\Primitive.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="vendor\Glad\include\glad\glad.h" />
     <ClInclude Include="vendor\Glad\include\KHR\khrplatform.h" />
@@ -110,7 +112,7 @@
   <ItemGroup>
     <None Include="res\shaders\color.frag" />
     <None Include="res\shaders\color_light.frag" />
-    <None Include="res\shaders\color_white.frag" />
+    <None Include="res\shaders\single_color.frag" />
     <None Include="res\shaders\model.frag" />
     <None Include="res\shaders\model.vert" />
     <None Include="res\shaders\pos.vert" />

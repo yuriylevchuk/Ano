@@ -112,10 +112,14 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
 unsigned int TextureFromFile(const char *path, const std::string &directory)
 {
 	std::string filename = std::string(path);
-	filename = directory + '/' + filename;
+	if (directory.length()) {
+		filename = directory + '/' + filename;
+	}
 
 	GLuint textureID;
 	glGenTextures(1, &textureID);
+
+	stbi_set_flip_vertically_on_load(true);
 
 	int imgWidth, imgHeight, imgChannels;
 	unsigned char* imgData = stbi_load(filename.c_str(), &imgWidth, &imgHeight, &imgChannels, 0);
@@ -130,14 +134,20 @@ unsigned int TextureFromFile(const char *path, const std::string &directory)
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, imgWidth, imgHeight, 0, format, GL_UNSIGNED_BYTE, imgData);
 		glGenerateMipmap(GL_TEXTURE_2D);
+		if (format == GL_RGBA) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		}
+		else {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		}
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 	else {
-		std::cout << "Failed to load texture: " << path << std::endl;
+		std::cout << "Failed to load texture: " << filename << std::endl;
 	}
 
 	stbi_image_free(imgData);

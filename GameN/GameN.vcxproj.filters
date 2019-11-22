@@ -36,6 +36,9 @@
     <ClCompile Include="src\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Primitive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\Glad\include\glad\glad.h">
@@ -59,6 +62,9 @@
     <ClInclude Include="src\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Primitive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\mix_two_tex.frag" />
@@ -66,8 +72,8 @@
     <None Include="res\shaders\color.frag" />
     <None Include="res\shaders\pos.vert" />
     <None Include="res\shaders\color_light.frag" />
-    <None Include="res\shaders\color_white.frag" />
     <None Include="res\shaders\model.vert" />
     <None Include="res\shaders\model.frag" />
+    <None Include="res\shaders\single_color.frag" />
   </ItemGroup>
 </Project>

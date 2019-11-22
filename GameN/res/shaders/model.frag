@@ -37,18 +37,28 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 vec3 calcDirectionLight(DirectionLight light, vec3 normal, vec3 viewDir);
 vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
+float LinearizeDepth(float depth);
+
+float zNear = 0.1; 
+float zFar  = 100.0; 
+
 void main() {
-	vec3 norm = normalize(Normal);
-	vec3 viewDir = normalize(viewPos - FragPos);
+	//vec3 norm = normalize(Normal);
+	//vec3 viewDir = normalize(viewPos - FragPos);
 	
-	vec3 result = calcDirectionLight(dirLight, norm, viewDir);
+	//vec3 result = calcDirectionLight(dirLight, norm, viewDir);
 
-	for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-		result += calcPointLight(pointLights[i], norm, FragPos, viewDir);
-	}
+	//for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+	//	result += calcPointLight(pointLights[i], norm, FragPos, viewDir);
+	//}
 
-	FragColor = vec4(result, 1.0f);
-	//FragColor = texture(texture_diffuse1, TexCoords);
+	//FragColor = vec4(result, 1.0f);
+	vec4 texColor = texture(texture_diffuse1, TexCoords);
+	if(texColor.a < 0.1)
+		discard;
+    FragColor = texColor;
+	//float depth = LinearizeDepth(gl_FragCoord.z) / zFar; 
+	//FragColor = vec4(vec3(depth), 1.0f);
 }
 
 vec3 calcDirectionLight(DirectionLight light, vec3 normal, vec3 viewDir) {
@@ -83,4 +93,10 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     diffuse  *= attenuation;
     specular *= attenuation;
 	return ambient + diffuse + specular;
+}
+
+float LinearizeDepth(float depth) {
+	float z = depth * 2.0 - 1.0;
+
+	return (2.0 * zNear * zFar) / (zFar + zNear - z * (zFar - zNear));
 }
