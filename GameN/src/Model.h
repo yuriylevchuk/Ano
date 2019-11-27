@@ -9,7 +9,7 @@
 #include <assimp/config.h>
 #include <stb_image/stb_image.h>
 
-unsigned int TextureFromFile(const char* path, const std::string& directory);
+unsigned int TextureFromFile(const char* path, const std::string& directory, GLint wrapping);
 
 class Model {
 public:

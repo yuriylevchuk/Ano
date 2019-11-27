@@ -75,5 +75,8 @@
     <None Include="res\shaders\model.vert" />
     <None Include="res\shaders\model.frag" />
     <None Include="res\shaders\single_color.frag" />
+    <None Include="res\shaders\screen_tex.frag" />
+    <None Include="res\shaders\skybox.vert" />
+    <None Include="res\shaders\skybox.frag" />
   </ItemGroup>
 </Project>

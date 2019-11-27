@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <filesystem>
+#include <map>
+#include <vector>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -19,6 +21,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow* window);
+unsigned int loadCubemap(std::vector<std::string> faces);
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 1000;
@@ -40,13 +43,88 @@ glm::vec3 pointLightPositions[] = {
 };
 
 
-std::vector<glm::vec3> vegetation;
+std::vector<glm::vec3> objectPositions;
 
 bool spotLightOn = false;
 
 GLuint lightVao;
 
-Shader objShader, strokeShader;
+Shader objShader, strokeShader, screenShader, skyboxShader;
+
+float screenQuad[] = {
+	// positions   // texture coords
+	-1.0f,  1.0f,  0.0f, 1.0f,
+	-1.0f, -1.0f,  0.0f, 0.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	 1.0f,  1.0f,  1.0f, 1.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f
+};
+
+std::vector<std::string> faces {
+		"res/textures/skybox/right.jpg",
+		"res/textures/skybox/left.jpg",
+		"res/textures/skybox/top.jpg",
+		"res/textures/skybox/bottom.jpg",
+		"res/textures/skybox/front.jpg",
+		"res/textures/skybox/back.jpg"
+};
+
+//std::vector<std::string> faces
+//{
+//		"res/textures/mp_gritty/right.tga",
+//		"res/textures/mp_gritty/left.tga",
+//		"res/textures/mp_gritty/top.tga",
+//		"res/textures/mp_gritty/bottom.tga",
+//		"res/textures/mp_gritty/front.tga",
+//		"res/textures/mp_gritty/back.tga"
+//};
+
+float skyboxVertices[] = {
+	// positions          
+	-1.0f,  1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	-1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f
+};
 
 class Game {
 public:
@@ -89,7 +167,11 @@ public:
 			std::cout << "Failed to initialize GLAD" << std::endl;
 		}
 
-		glEnable(GL_DEPTH_TEST);
+		//glEnable(GL_DEPTH_TEST);
+
+		
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glEnable(GL_CULL_FACE);
 		//glEnable(GL_STENCIL_TEST);
 		//glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -133,19 +215,90 @@ public:
 	}
 
 	void Run() {
-		//Model testModel("res/models/nanosuit/nanosuit.obj");
+		unsigned int screenVAO, screenVBO;
+		glGenVertexArrays(1, &screenVAO);
+		glGenBuffers(1, &screenVBO);
 
-		vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-		vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-		vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-		vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-		vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+		glBindVertexArray(screenVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, screenVBO);
 
-		Primitive cube(Primitive_Type::CUBE, "res/textures/box2.png");
-		Primitive plane(Primitive_Type::PLANE, "res/textures/concrete.jpg");
-		Primitive quad(Primitive_Type::QUAD, "res/textures/grass.png");
+		glBufferData(GL_ARRAY_BUFFER, sizeof(screenQuad), &screenQuad, GL_STATIC_DRAW);
+
+		// vertex positions
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		// vertex texture coords
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+		glBindVertexArray(0);
+		
+		//framebuffer 
+		unsigned int framebuffer;
+		glGenFramebuffers(1, &framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+		unsigned int texColorBuffer;
+		glGenTextures(1, &texColorBuffer);
+		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_windowWidth, m_windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+
+		unsigned int rbo;
+		glGenRenderbuffers(1, &rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_windowWidth, m_windowHeight);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+		unsigned int skyboxVAO, skyboxVBO;
+		glGenVertexArrays(1, &skyboxVAO);
+		glGenBuffers(1, &skyboxVBO);
+
+		glBindVertexArray(skyboxVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+
+		// vertex positions
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+		glBindVertexArray(0);
+		
+		
+		unsigned int cubemapTexture = loadCubemap(faces);
+
+
+		Model testModel("res/models/nanosuit/nanosuit.obj");
+
+		//objectPositions.push_back(glm::vec3(-0.98f, 2.0f, 0.5f));
+		//objectPositions.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+		//objectPositions.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+		//objectPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+		//objectPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+
+		Primitive cube(Primitive_Type::CUBE, "res/textures/box.png", GL_REPEAT);
+		Primitive plane(Primitive_Type::PLANE, "res/textures/concrete.jpg", GL_REPEAT);
+		//Primitive quadGrass(Primitive_Type::QUAD, "res/textures/grass.png", GL_CLAMP_TO_EDGE);
+		//Primitive quadWindow(Primitive_Type::QUAD, "res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
 		objShader.Create("res/shaders/model.vert", "res/shaders/model.frag");
-		strokeShader.Create("res/shaders/model.vert", "res/shaders/single_color.frag");
+		screenShader.Create("res/shaders/pos_texpos.vert", "res/shaders/screen_tex.frag");
+		skyboxShader.Create("res/shaders/skybox.vert", "res/shaders/skybox.frag");
+		//strokeShader.Create("res/shaders/model.vert", "res/shaders/single_color.frag");
 
 		//m_ObjShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
 		//m_ObjShader.setVec3("dirLight.ambient", glm::vec3(0.4f, 0.4f, 0.4f));
@@ -172,20 +325,37 @@ public:
 			processInput(m_window);
 			
 			glfwPollEvents();
+			//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+			glEnable(GL_DEPTH_TEST);
 
 			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+			
 			OnUpdate();
+
+			glDepthMask(GL_FALSE);
+			skyboxShader.Use();
+
 
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glm::mat4 model = glm::mat4(1.0f);
-			glm::mat4 view = camera.GetViewMatrix();
+			glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 			glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), (float)m_windowWidth / (float)m_windowHeight, 0.1f, 100.0f);
 
-			strokeShader.Use();
-			strokeShader.setMat4("view", view);
-			strokeShader.setMat4("projection", projection);
+
+			skyboxShader.setMat4("view", view);
+			skyboxShader.setMat4("projection", projection);
+
+			glBindVertexArray(skyboxVAO);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDepthMask(GL_TRUE);
+
+			//strokeShader.Use();
+			//strokeShader.setMat4("view", view);
+			//strokeShader.setMat4("projection", projection);
+			view = camera.GetViewMatrix();
+
 
 			objShader.Use();
 			objShader.setMat4("view", view);
@@ -198,7 +368,7 @@ public:
 
 			//glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			//glStencilMask(0xFF);
-
+			//glEnable(GL_CULL_FACE);
 			model = glm::translate(model, glm::vec3(-1.0f, 0.002f, -0.3f));
 			objShader.setMat4("model", model);
 			cube.Draw(objShader);
@@ -208,21 +378,49 @@ public:
 			objShader.setMat4("model", model);
 			cube.Draw(objShader);
 
-			for (unsigned int i = 0; i < vegetation.size(); i++) {
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, vegetation[i]);
-				objShader.setMat4("model", model);
-				quad.Draw(objShader);
-			}
 
 			model = glm::mat4(1.0f);
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			model = glm::translate(model, vegetation[2]);
-			model = glm::translate(model, glm::vec3(0.2f, 0.0f, -0.22f));
+			model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
+			model = glm::translate(model, glm::vec3(-6.5f, 3.35f, -1.4f));
 			objShader.setMat4("model", model);
-			quad.Draw(objShader);
+			testModel.Draw(objShader);
+
+			model = glm::mat4(1.0f);
+			model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
+			model = glm::translate(model, glm::vec3(13.5f, 3.35f, 7.0f));
+			objShader.setMat4("model", model);
+			testModel.Draw(objShader);
+			//glDisable(GL_CULL_FACE);
+
+			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			//glClear(GL_COLOR_BUFFER_BIT);
+
+			//screenShader.Use();
+			//glBindVertexArray(screenVAO);
+			//glDisable(GL_DEPTH_TEST);
+			//glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+			//glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			//glEnable(GL_BLEND);
+
+			//std::map<float, glm::vec3> sortedPositions;
+			//for (unsigned int i = 0; i < objectPositions.size(); i++) {
+			//	float distance = glm::length(camera.GetPosition() - objectPositions[i]);
+			//	sortedPositions[distance] = objectPositions[i];
+			//}
+
+			//for (std::map<float, glm::vec3>::reverse_iterator it = sortedPositions.rbegin(); it != sortedPositions.rend(); ++it) {
+			//	model = glm::mat4(1.0f);
+			//	model = glm::translate(model, it->second);
+			//	objShader.setMat4("model", model);
+			//	quadWindow.Draw(objShader);
+			//}
+
+			//glDisable(GL_BLEND);
 
 
+			
 			//glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 			//glStencilMask(0x00);
 			//glDisable(GL_DEPTH_TEST);
@@ -266,9 +464,9 @@ public:
 			glfwSwapBuffers(m_window);
 		}
 
-/*		glDeleteVertexArrays(1, &objVao);
-		glDeleteVertexArrays(1, &lightVao);
-		glDeleteBuffers(1, &vbo);*/
+		glDeleteFramebuffers(1, &framebuffer);
+		glDeleteVertexArrays(1, &screenVAO);
+		glDeleteBuffers(1, &screenVBO);
 	}
 
 private:
@@ -306,6 +504,16 @@ void processInput(GLFWwindow* window) {
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE)
 			spotLightOn = !spotLightOn;
 	}
+
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -327,6 +535,39 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(yoffset);
 }
+
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
+}
+
 
 int main(int argc, char** argv) {
 	Game game;

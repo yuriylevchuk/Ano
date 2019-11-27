@@ -1,7 +1,7 @@
 #include "Primitive.h"
 #include "Model.h"
 
-Primitive::Primitive(Primitive_Type type, const std::string texturePath) {
+Primitive::Primitive(Primitive_Type type, const std::string texturePath, GLint textureWrapping) {
 	glGenVertexArrays(1, &mVAO);
 	glGenBuffers(1, &mVBO);
 
@@ -32,10 +32,12 @@ Primitive::Primitive(Primitive_Type type, const std::string texturePath) {
 
 	glBindVertexArray(0);
 
-	mTexture = TextureFromFile(texturePath.c_str(), "");
+	mTexture = TextureFromFile(texturePath.c_str(), "", textureWrapping);
 }
 
 Primitive::~Primitive() {
+	glDeleteVertexArrays(1, &mVAO);
+	glDeleteBuffers(1, &mVBO);
 }
 
 void Primitive::Draw(Shader shader) {

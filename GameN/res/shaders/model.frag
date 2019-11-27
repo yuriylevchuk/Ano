@@ -53,10 +53,7 @@ void main() {
 	//}
 
 	//FragColor = vec4(result, 1.0f);
-	vec4 texColor = texture(texture_diffuse1, TexCoords);
-	if(texColor.a < 0.1)
-		discard;
-    FragColor = texColor;
+	FragColor = texture(texture_diffuse1, TexCoords);
 	//float depth = LinearizeDepth(gl_FragCoord.z) / zFar; 
 	//FragColor = vec4(vec3(depth), 1.0f);
 }
