@@ -71,16 +71,6 @@ std::vector<std::string> faces {
 		"res/textures/skybox/back.jpg"
 };
 
-//std::vector<std::string> faces
-//{
-//		"res/textures/mp_gritty/right.tga",
-//		"res/textures/mp_gritty/left.tga",
-//		"res/textures/mp_gritty/top.tga",
-//		"res/textures/mp_gritty/bottom.tga",
-//		"res/textures/mp_gritty/front.tga",
-//		"res/textures/mp_gritty/back.tga"
-//};
-
 float skyboxVertices[] = {
 	// positions          
 	-1.0f,  1.0f, -1.0f,
@@ -333,28 +323,16 @@ public:
 			
 			OnUpdate();
 
-			glDepthMask(GL_FALSE);
-			skyboxShader.Use();
-
 
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glm::mat4 model = glm::mat4(1.0f);
-			glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 			glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), (float)m_windowWidth / (float)m_windowHeight, 0.1f, 100.0f);
 
-
-			skyboxShader.setMat4("view", view);
-			skyboxShader.setMat4("projection", projection);
-
-			glBindVertexArray(skyboxVAO);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glDepthMask(GL_TRUE);
 
 			//strokeShader.Use();
 			//strokeShader.setMat4("view", view);
 			//strokeShader.setMat4("projection", projection);
-			view = camera.GetViewMatrix();
+			glm::mat4 view = camera.GetViewMatrix();
 
 
 			objShader.Use();
@@ -363,33 +341,49 @@ public:
 
 			//glStencilMask(0x00);
 
-			objShader.setMat4("model", model);
-			plane.Draw(objShader);
+			//objShader.setMat4("model", model);
+			//plane.Draw(objShader);
 
 			//glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			//glStencilMask(0xFF);
 			//glEnable(GL_CULL_FACE);
-			model = glm::translate(model, glm::vec3(-1.0f, 0.002f, -0.3f));
-			objShader.setMat4("model", model);
-			cube.Draw(objShader);
+			//model = glm::translate(model, glm::vec3(-1.0f, 0.002f, -0.3f));
+			//objShader.setMat4("model", model);
+			//cube.Draw(objShader);
 
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(2.0f, 0.002f, 1.0f));
-			objShader.setMat4("model", model);
-			cube.Draw(objShader);
-
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(2.0f, 0.002f, 1.0f));
+			//objShader.setMat4("model", model);
+			//cube.Draw(objShader);
+			glBindVertexArray(skyboxVAO);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
 			model = glm::mat4(1.0f);
 			model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
 			model = glm::translate(model, glm::vec3(-6.5f, 3.35f, -1.4f));
+			objShader.setVec3("cameraPos", camera.GetPosition());
 			objShader.setMat4("model", model);
 			testModel.Draw(objShader);
 
-			model = glm::mat4(1.0f);
-			model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
-			model = glm::translate(model, glm::vec3(13.5f, 3.35f, 7.0f));
-			objShader.setMat4("model", model);
-			testModel.Draw(objShader);
+			//model = glm::mat4(1.0f);
+			//model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
+			//model = glm::translate(model, glm::vec3(13.5f, 3.35f, 7.0f));
+			//objShader.setMat4("model", model);
+			//testModel.Draw(objShader);
+
+			skyboxShader.Use();
+
+			view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+			
+			skyboxShader.setMat4("view", view);
+			skyboxShader.setMat4("projection", projection);
+
+
+			glDepthFunc(GL_LEQUAL);
+			glBindVertexArray(skyboxVAO);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDepthFunc(GL_LESS);
 			//glDisable(GL_CULL_FACE);
 
 			//glBindFramebuffer(GL_FRAMEBUFFER, 0);

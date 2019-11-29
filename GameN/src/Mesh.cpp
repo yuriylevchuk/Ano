@@ -14,6 +14,7 @@ Mesh::~Mesh() {
 void Mesh::Draw(Shader shader) {
 	unsigned int diffuseN = 1;
 	unsigned int specularN = 1;
+	unsigned int reflectionN = 1;
 
 	for (unsigned int i = 0; i < textures.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + i);
@@ -25,6 +26,9 @@ void Mesh::Draw(Shader shader) {
 			ss << diffuseN++;
 		} else if (name == "texture_specular") {
 			ss << specularN++;
+		}
+		else if (name == "texture_reflection") {
+			ss << reflectionN++;
 		}
 		number = ss.str();
 
