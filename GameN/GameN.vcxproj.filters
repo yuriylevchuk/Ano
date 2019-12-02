@@ -78,5 +78,10 @@
     <None Include="res\shaders\screen_tex.frag" />
     <None Include="res\shaders\skybox.vert" />
     <None Include="res\shaders\skybox.frag" />
+    <None Include="res\shaders\explode.frag" />
+    <None Include="res\shaders\explode.vert" />
+    <None Include="res\shaders\explode.geom" />
+    <None Include="res\shaders\show_normals.vert" />
+    <None Include="res\shaders\show_normals.geom" />
   </ItemGroup>
 </Project>

@@ -110,9 +110,14 @@
     <ClInclude Include="vendor\stb_image\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\shaders\explode.geom" />
     <None Include="res\shaders\color.frag" />
     <None Include="res\shaders\color_light.frag" />
+    <None Include="res\shaders\explode.frag" />
+    <None Include="res\shaders\explode.vert" />
     <None Include="res\shaders\screen_tex.frag" />
+    <None Include="res\shaders\show_normals.geom" />
+    <None Include="res\shaders\show_normals.vert" />
     <None Include="res\shaders\single_color.frag" />
     <None Include="res\shaders\model.frag" />
     <None Include="res\shaders\model.vert" />

@@ -28,7 +28,7 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const {
 	glUniformMatrix4fv(glGetUniformLocation(m_shaderProgram, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
 
-void Shader::Create(const std::string &vertexPath, const std::string &fragmentPath) {
+void Shader::Create(const std::string &vertexPath, const std::string &fragmentPath, const std::string& geometryPath) {
 	GLuint vertexShader;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	const std::string vertexShaderSource = ParseShader(vertexPath);
@@ -54,9 +54,27 @@ void Shader::Create(const std::string &vertexPath, const std::string &fragmentPa
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
 		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
+
+	GLuint geometryShader;
+	if (geometryPath.length()) {
+		geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+		const std::string geometryShaderSource = ParseShader(geometryPath);
+		const GLchar* srcG = geometryShaderSource.c_str();
+		glShaderSource(geometryShader, 1, &srcG, NULL);
+		glCompileShader(geometryShader);
+		glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			glGetShaderInfoLog(geometryShader, 512, NULL, infoLog);
+			std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
+		}
+	}
+
 	m_shaderProgram = glCreateProgram();
 	glAttachShader(m_shaderProgram, vertexShader);
 	glAttachShader(m_shaderProgram, fragmentShader);
+	if (geometryPath.length()) {
+		glAttachShader(m_shaderProgram, geometryShader);
+	}
 	glLinkProgram(m_shaderProgram);
 	glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
 	if (!success)
@@ -68,6 +86,9 @@ void Shader::Create(const std::string &vertexPath, const std::string &fragmentPa
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+	if (geometryPath.length()) {
+		glDeleteShader(geometryShader);
+	}
 }
 
 std::string Shader::ParseShader(const std::string& filePath) {

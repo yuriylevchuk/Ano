@@ -18,7 +18,6 @@ void Mesh::Draw(Shader shader) {
 
 	for (unsigned int i = 0; i < textures.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + i);
-		
 		std::stringstream ss;
 		std::string number;
 		std::string name = textures[i].type;
@@ -31,8 +30,7 @@ void Mesh::Draw(Shader shader) {
 			ss << reflectionN++;
 		}
 		number = ss.str();
-
-		shader.setFloat((name + number).c_str(), i);
+		shader.setInt((name + number).c_str(), i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
 	glActiveTexture(GL_TEXTURE0);

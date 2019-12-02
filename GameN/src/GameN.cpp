@@ -49,7 +49,7 @@ bool spotLightOn = false;
 
 GLuint lightVao;
 
-Shader objShader, strokeShader, screenShader, skyboxShader;
+Shader objShader, strokeShader, screenShader, skyboxShader, normalShader;
 
 float screenQuad[] = {
 	// positions   // texture coords
@@ -135,6 +135,7 @@ public:
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_SAMPLES, 4);
 
 		m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, m_windowTitle, NULL, NULL);
 		if (!m_window) {
@@ -158,7 +159,7 @@ public:
 		}
 
 		//glEnable(GL_DEPTH_TEST);
-
+		glEnable(GL_MULTISAMPLE);
 		
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//glEnable(GL_CULL_FACE);
@@ -168,40 +169,10 @@ public:
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	void OnUpdate() {
+	void UpdateDeltaTime() {
 		GLfloat currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-		
-
-
-		//lightPos.x = cos(glfwGetTime()) * 2.0f;
-		//lightPos.y = sin(glfwGetTime()) * 0.5f;
-		//lightPos.z = sin(glfwGetTime()) * 2.0f;
-		
-	//	m_ObjShader.setVec3("spotLight.position", camera.GetPosition());
-	//	m_ObjShader.setVec3("spotLight.direction", camera.GetFront());
-	//	m_ObjShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-	//	m_ObjShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-
-	/*	if (spotLightOn) {
-			m_ObjShader.setInt("spotLightOn", 1);
-		} else {
-			m_ObjShader.setInt("spotLightOn", 0);
-		}
-
-		m_LightShader.Use();
-		m_LightShader.setMat4("view", view);
-		m_LightShader.setMat4("projection", projection);
-
-		glBindVertexArray(lightVao);
-		for (GLuint i = 0; i < 4; i++) {
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, pointLightPositions[i]);
-			model = glm::scale(model, glm::vec3(0.1f));
-			m_LightShader.setMat4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}*/
 	}
 
 	void Run() {
@@ -272,7 +243,6 @@ public:
 		
 		unsigned int cubemapTexture = loadCubemap(faces);
 
-
 		Model testModel("res/models/nanosuit/nanosuit.obj");
 
 		//objectPositions.push_back(glm::vec3(-0.98f, 2.0f, 0.5f));
@@ -281,13 +251,14 @@ public:
 		//objectPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
 		//objectPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
-		Primitive cube(Primitive_Type::CUBE, "res/textures/box.png", GL_REPEAT);
-		Primitive plane(Primitive_Type::PLANE, "res/textures/concrete.jpg", GL_REPEAT);
+		//Primitive cube(Primitive_Type::CUBE, "res/textures/box.png", GL_REPEAT);
+		//Primitive plane(Primitive_Type::PLANE, "res/textures/concrete.jpg", GL_REPEAT);
 		//Primitive quadGrass(Primitive_Type::QUAD, "res/textures/grass.png", GL_CLAMP_TO_EDGE);
 		//Primitive quadWindow(Primitive_Type::QUAD, "res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
-		objShader.Create("res/shaders/model.vert", "res/shaders/model.frag");
-		screenShader.Create("res/shaders/pos_texpos.vert", "res/shaders/screen_tex.frag");
-		skyboxShader.Create("res/shaders/skybox.vert", "res/shaders/skybox.frag");
+		objShader.Create("res/shaders/model.vert", "res/shaders/model.frag", ""); 
+		normalShader.Create("res/shaders/show_normals.vert", "res/shaders/single_color.frag", "res/shaders/show_normals.geom");
+		//screenShader.Create("res/shaders/pos_texpos.vert", "res/shaders/screen_tex.frag", "");
+		skyboxShader.Create("res/shaders/skybox.vert", "res/shaders/skybox.frag", "");
 		//strokeShader.Create("res/shaders/model.vert", "res/shaders/single_color.frag");
 
 		//m_ObjShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
@@ -321,7 +292,7 @@ public:
 			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 			
-			OnUpdate();
+			UpdateDeltaTime();
 
 
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -355,16 +326,27 @@ public:
 			//model = glm::translate(model, glm::vec3(2.0f, 0.002f, 1.0f));
 			//objShader.setMat4("model", model);
 			//cube.Draw(objShader);
-			glBindVertexArray(skyboxVAO);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
 
 			model = glm::mat4(1.0f);
-			model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
-			model = glm::translate(model, glm::vec3(-6.5f, 3.35f, -1.4f));
-			objShader.setVec3("cameraPos", camera.GetPosition());
+			//model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
+			//model = glm::translate(model, glm::vec3(-6.5f, 3.35f, -1.4f));
+			//model = glm::rotate(model, glm::radians(-(float)glfwGetTime() * 15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			//objShader.setVec3("cameraPos", camera.GetPosition());
 			objShader.setMat4("model", model);
+
+			glActiveTexture(GL_TEXTURE3);
+			objShader.setInt("skybox", 3);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			glActiveTexture(GL_TEXTURE0);
+			
 			testModel.Draw(objShader);
 
+			//normalShader.Use();
+			//normalShader.setMat4("view", view);
+			//normalShader.setMat4("projection", projection);
+			//normalShader.setMat4("model", model);
+			//testModel.Draw(normalShader);
 			//model = glm::mat4(1.0f);
 			//model = glm::scale(model, glm::vec3(0.15f, 0.15f, 0.15f));
 			//model = glm::translate(model, glm::vec3(13.5f, 3.35f, 7.0f));
@@ -381,7 +363,7 @@ public:
 
 			glDepthFunc(GL_LEQUAL);
 			glBindVertexArray(skyboxVAO);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			//glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glDepthFunc(GL_LESS);
 			//glDisable(GL_CULL_FACE);
